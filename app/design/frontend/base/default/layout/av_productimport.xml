@@ -1,0 +1,12 @@
+<layout>
+    <av_productimport_index_index>
+        <reference name="root">
+            <action method="setTemplate">
+                <template>page/1column.phtml</template>
+            </action>
+        </reference>
+        <reference name="content">
+            <block type="av_productimport/dashboard" name="import.dashboard" template="dashboard/index.phtml" />
+        </reference>
+    </av_productimport_index_index>
+</layout>
