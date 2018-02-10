@@ -6,47 +6,40 @@
         </AV_Productimport>
     </modules>
     <global>
+        <blocks>
+            <av_productimport>
+                <class>AV_Productimport_Block</class>
+            </av_productimport>
+        </blocks>
         <models>
             <av_productimport>
                 <class>AV_Productimport_Model</class>
             </av_productimport>
         </models>
-        <events>
-            <admin_system_config_changed_section_tab1>
-                <observers>
-                    <av_productimport>
-                        <type>singleton</type>
-                        <class>av_productimport/importer</class>
-                        <method>main</method>
-                    </av_productimport>
-                </observers>
-            </admin_system_config_changed_section_tab1>
-        </events>
+         <template>
+            <email>
+                <result module="av_productimport">
+                    <label>Order Payment Notify Mail</label>
+                    <file>sales/result.html</file>
+                    <type>html</type>
+                </result>
+            </email>
+        </template>
+        
     </global>
-    <default>
-        <csvupload>
-            <general>
-                <!--<text_field>Default value</text_field>
-                <textarea></textarea>
-                <dropdown>key2</dropdown>
-                <multiple_dropdown>key1,key2</multiple_dropdown>
-                <time>11,30,45</time>
-                <active>0</active>
-                <boolean>1</boolean>
-                <dependant_text_field>Default value</dependant_text_field>-->
-            </general>
-        </csvupload>
-    </default>
+    <crontab>
+        <jobs>
+            <av_productimport_importer>
+                <schedule>
+                    <cron_expr>*/15 * * * *</cron_expr>
+                </schedule>
+                <run>
+                    <model>av_productimport/observer::run</model>
+                </run>
+            </av_productimport_importer>
+        </jobs>
+    </crontab>
     <frontend>
-        <routers>
-            <av_productimport>
-                <use>standard</use>
-                <args>
-                    <module>AV_Productimport</module>
-                    <frontName>test</frontName>
-                </args>
-            </av_productimport>
-        </routers>
         <layout>
             <updates>
                 <av_productimport>
@@ -55,11 +48,4 @@
             </updates>
         </layout>
     </frontend>
-    <global>
-        <blocks>
-            <av_productimport>
-                <class>AV_Productimport_Block</class>
-            </av_productimport>
-        </blocks>
-    </global>
 </config>

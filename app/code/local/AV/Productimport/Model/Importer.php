@@ -9,7 +9,7 @@ class AV_Productimport_Model_Importer {
     }
 
     public function runProcess() {
-        $file_name = Mage::getStoreConfig('tab1/general/file');
+        $file_name = Mage::getStoreConfig('upload/general/file');
         $file = Mage::getBaseDir() . DS . 'var/uploads' . DS . $file_name;
         $ext = pathinfo($file, PATHINFO_EXTENSION);
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
@@ -42,6 +42,7 @@ class AV_Productimport_Model_Importer {
     }
 
     protected function setImportData($result) {
+
         foreach ($result as $lines => $line) {
             if ($lines == 0) {
                 continue;
@@ -117,21 +118,32 @@ class AV_Productimport_Model_Importer {
         }
         /** @var $import AvS_FastSimpleImport_Model_Import */
         $import = Mage::getModel('fastsimpleimport/import');
-        $success_msg = "CSV file is successfully uploaded with " . count($data) . " product(s)";
+        $prod_names = array();
+        for ($i = 0; $i <= count($data); $i++) {
+            $prod_names[] = $data[$i]["name"] . "<br>";
+        }
+        $prod_name = implode(" ", $prod_names);
+        $success_msg = "CSV file is successfully uploaded with " . count($data) . " product(s), with " . "<br>" . $prod_name;
         $error_msg = "Error occurred while uploading the file to the server. See more details in exepction.log";
         try {
             $import->processProductImport($data);
-            Mage::getSingleton("core/session")->addSuccess($success_msg);
+            if (!$import->getErrorMessages()) {
+                $this->sendMail($success_msg);
+            }
         } catch (Exception $e) {
-            Mage::log($import->getErrorMessages(), Zend_Log::ERR, 'exception.log', true);
-            Mage::getSingleton("core/session")->addError($error_msg);
+            $exepction_mail = $e->getMessage();
+            $exepction = $import->getErrorMessages();
+            Mage::log($exepction, Zend_Log::ERR, 'exception.log', true);
+            if ($import->getErrorMessages()) {
+                $this->sendMail($error_msg, $exepction_mail);
+            }
         }
     }
 
     protected function clearindex() {
-        for ($i = 1; $i <= 9; $i++) {
-            $process = Mage::getModel('index/process')->load($i);
-            $process->reindexAll();
+        $indexingProcesses = Mage::getSingleton('index/indexer')->getProcessesCollection();
+        foreach ($indexingProcesses as $process) {
+            $process->reindexEverything();
         }
     }
 
@@ -139,6 +151,37 @@ class AV_Productimport_Model_Importer {
         $allTypes = Mage::app()->useCache();
         foreach ($allTypes as $type => $cache) {
             Mage::app()->getCacheInstance()->cleanType($type);
+        }
+    }
+
+    public function sendMail($msg, $exepction = "") {
+        if ($exepction) {
+            $msg_error = str_replace("::::", "<br>", $exepction);
+        }
+        $template_id = 'result';
+        $mail = Mage::getModel('core/email_template')->loadDefault($template_id);
+        $mail_from = Mage::getStoreConfig('trans_email/ident_general/email');
+        $mail_to = Mage::getStoreConfig('upload/general/tomail');
+        $customer_name = Mage::getStoreConfig('trans_email/ident_general/name');
+        $mail_subject = "AV Productimport Report";
+        $mail_name = Mage::getStoreConfig('trans_email/ident_general/name');
+        $mail->setSenderName($mail_name);
+        $mail->setSenderEmail($mail_to);
+        $email_template_variables = array(
+            'customer_name' => $customer_name,
+            'message' => $msg,
+            'exepction' => $msg_error,
+            'prod_name' => $prod_name
+        );
+        $mail->setTemplateSubject(trim($mail_subject));
+        $mail->setFromEmail($mail_from);
+        $mail->setFromName($mail_name);
+        $mail->setType('html');
+        try {
+            $mail->send($mail_to, $customer_name, $email_template_variables);
+            Mage::getSingleton('core/session')->addSuccess('Your request has been sent');
+        } catch (Exception $e) {
+            Mage::getSingleton('core/session')->addError('Unable to send.');
         }
     }
 

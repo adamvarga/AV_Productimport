@@ -17,7 +17,7 @@ Installation Instructions
 -------------------------
 1. Install the extension via GitHub, and deploy with modman.
 2. Clear the cache, logout from the admin panel and then login again.
-3. Uplod CSV File at System -> Configuration -> CSV DATA CONFIG -> Upload.
+3. Uplod CSV File at System -> Configuration -> CSV DATA CONFIG -> Upload / Report to.
 
 Uninstallation
 --------------
@@ -30,7 +30,6 @@ ToDO & Fix Me:
 - Category import & assing to product
 - Fix with another product type (conf., grouped etc.)
 - Dashboard with imported data
-- Transaction email for admin with import result
 
 Support
 -------
